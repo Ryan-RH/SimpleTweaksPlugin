@@ -32,6 +32,7 @@ public class Service {
     [PluginService] public static INotificationManager NotificationManager { get; private set; }
     [PluginService] public static IContextMenu ContextMenu { get; private set; }
     [PluginService] public static INamePlateGui NamePlateGui { get; private set; }
+    [PluginService] public static IPartyFinderGui PartyFinderGui { get; private set; }
 
     public static NativeKeyState NativeKeyState { get; } = new();
 
