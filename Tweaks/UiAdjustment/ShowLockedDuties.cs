@@ -11,6 +11,9 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using FFXIVClientStructs.FFXIV.Client.Graphics;
 using System.Numerics;
+using SimpleTweaksPlugin.Utility;
+using FFXIVClientStructs.FFXIV.Client.UI.Info;
+using System.Runtime.InteropServices;
 
 namespace SimpleTweaksPlugin.Tweaks.UiAdjustment;
 
@@ -43,7 +46,19 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
 
     private static void ReceiveListing(IPartyFinderListing listing, IPartyFinderListingEventArgs args)
     {
-        Listings.Add(listing);
+        bool adding = true;
+
+        foreach (var player in InfoProxyBlacklist.Instance()->BlockedCharacters)
+        {
+            string playerName = Marshal.PtrToStringAnsi((IntPtr)player.Name);
+            if (playerName != "" && listing.Name.ToString() == playerName)
+            {
+                adding = false;
+            }
+        }
+
+        if (adding)
+            Listings.Add(listing);
     }
 
     [FrameworkUpdate]
@@ -57,11 +72,11 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
         }
     }
 
-    [AddonPostRefresh("LookingForGroup")]
+    [AddonPostUpdate("LookingForGroup")]
     private unsafe void OnAddonRefresh(AtkUnitBase* addon)
     {
-        var refreshed = addon->GetNodeById(47)->GetAsAtkComponentButton()->IsEnabled;
-        if (refreshed)
+        var refreshed2 = addon->GetNodeById(7)->GetAsAtkComponentRadioButton()->GetTextNodeById(4)->GetAsAtkTextNode();
+        if (refreshed2->NodeText.GetString() != "")
         {
             if (!RetrievedAllListings)
             {
@@ -83,7 +98,7 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
         }
     }
 
-    [AddonPreDraw("LookingForGroup")]
+    [AddonPostDraw("LookingForGroup")]
     private unsafe void OnAddonDraw(AtkUnitBase* addon)
     {
         if (RetrievedAllListings)
@@ -105,7 +120,7 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
             for (int i = 0; i < Math.Min(Listings.Count, elements); i++)
             {
                 var itemRendererComponent = componentList->GetItemRenderer(i);
-                if (itemRendererComponent->ListItemIndex < Listings.Count)
+                if (itemRendererComponent != null && itemRendererComponent->ListItemIndex < Listings.Count)
                 {
                     var UiListing = Listings[itemRendererComponent->ListItemIndex];
                     if (!itemRendererComponent->IsEnabled)
