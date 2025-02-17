@@ -73,7 +73,7 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
     }
 
     [AddonPostUpdate("LookingForGroup")]
-    private unsafe void OnAddonRefresh(AtkUnitBase* addon)
+    private unsafe void OnAddonUpdate(AtkUnitBase* addon)
     {
         var refreshed2 = addon->GetNodeById(7)->GetAsAtkComponentRadioButton()->GetTextNodeById(4)->GetAsAtkTextNode();
         if (refreshed2->NodeText.GetString() != "")
@@ -98,7 +98,7 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
         }
     }
 
-    [AddonPostDraw("LookingForGroup")]
+    [AddonPreDraw("LookingForGroup")]
     private unsafe void OnAddonDraw(AtkUnitBase* addon)
     {
         if (RetrievedAllListings)
@@ -135,7 +135,6 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
                             description += $"[{UiListing.SearchArea}]";
                         description += $" {UiListing.Description}";
                         itemRendererComponent->GetTextNodeById(descriptionId)->GetAsAtkTextNode()->SetText(description);
-                        itemRendererComponent->GetTextNodeById(descriptionId)->GetAsAtkTextNode()->TextColor = Vector4ToByteColor(new Vector4(0.9f, 0.9f, 0.9f, 1f));
                     }
                 }
             }
