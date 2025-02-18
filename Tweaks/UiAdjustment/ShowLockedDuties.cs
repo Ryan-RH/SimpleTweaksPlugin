@@ -47,7 +47,6 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
     private static void ReceiveListing(IPartyFinderListing listing, IPartyFinderListingEventArgs args)
     {
         bool adding = true;
-
         foreach (var player in InfoProxyBlacklist.Instance()->BlockedCharacters)
         {
             string playerName = Marshal.PtrToStringAnsi((IntPtr)player.Name);
@@ -75,25 +74,34 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
     [AddonPostUpdate("LookingForGroup")]
     private unsafe void OnAddonUpdate(AtkUnitBase* addon)
     {
-        var refreshed2 = addon->GetNodeById(7)->GetAsAtkComponentRadioButton()->GetTextNodeById(4)->GetAsAtkTextNode();
-        if (refreshed2->NodeText.GetString() != "")
+        var radioButton = addon->GetNodeById(7);//->GetAsAtkComponentRadioButton();//->GetTextNodeById(4)->GetAsAtkTextNode();
+        if (radioButton != null)
         {
-            if (!RetrievedAllListings)
+            var radioText = radioButton->GetAsAtkComponentRadioButton()->GetTextNodeById(4)->GetAsAtkTextNode();
+            if (radioText != null)
             {
-                RetrievedAllListings = true;
-                Listings = Listings.OrderBy(listing =>
+                if (radioText->NodeText.GetString() != "")
                 {
-                    var categorySortValue = (listing.Category == DutyCategory.None) ? 0 : (ushort)listing.Category;
-                    return (IsUnlocked(listing.Duty.Value) ? 0 : 1, categorySortValue, -listing.Duty.Value.SortKey);
-                }).ToList();
-            }
-        }
-        else
-        {
-            if (RetrievedAllListings)
-            {
-                RetrievedAllListings = false;
-                Listings.Clear();
+                    if (!RetrievedAllListings)
+                    {
+                        RetrievedAllListings = true;
+                        Listings = Listings.OrderBy(listing =>
+                        {
+                            var categorySortValue = (listing.Category == DutyCategory.None) ? 0 : (ushort)listing.Category;
+                            if (listing.Duty.IsValid)
+                                return (IsUnlocked(listing.Duty.Value) ? 0 : 1, categorySortValue, -listing.Duty.Value.SortKey);
+                            return (0, categorySortValue, 0);
+                        }).ToList();
+                    }
+                }
+                else
+                {
+                    if (RetrievedAllListings)
+                    {
+                        RetrievedAllListings = false;
+                        Listings.Clear();
+                    }
+                }
             }
         }
     }
@@ -163,7 +171,6 @@ public unsafe class ShowLockedDuties : UiAdjustments.SubTweak
             unlockQuestRowId = duty.UnlockQuest.RowId;
         else
             unlockQuestRowId = duty.Unknown31;
-
         if (unlockQuestRowId != 0)
             return QuestManager.IsQuestComplete(unlockQuestRowId);
         return UIState.IsInstanceContentUnlocked(duty.Content.RowId);
